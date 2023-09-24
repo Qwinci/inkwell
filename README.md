@@ -43,6 +43,7 @@ Supported versions:
 | 14.0.x       | llvm14-0      |
 | 15.0.x       | llvm15-0      |
 | 16.0.x       | llvm16-0      |
+| 17.0.x       | llvm17-0      |
 
 Please be aware that we may make breaking changes on master from time to time since we are
 pre-v1.0.0, in compliance with semver. Please prefer a crates.io release whenever possible!

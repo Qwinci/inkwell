@@ -1,8 +1,12 @@
+#[llvm_versions(4.0..=16.0)]
 use llvm_sys::core::{
     LLVMCreateFunctionPassManagerForModule, LLVMCreatePassManager, LLVMDisposePassManager,
-    LLVMFinalizeFunctionPassManager, LLVMGetGlobalPassRegistry, LLVMInitializeFunctionPassManager,
+    LLVMFinalizeFunctionPassManager, LLVMInitializeFunctionPassManager,
     LLVMRunFunctionPassManager, LLVMRunPassManager,
 };
+#[llvm_versions(4.0..=16.0)]
+use llvm_sys::core::LLVMGetGlobalPassRegistry;
+#[llvm_versions(4.0..=16.0)]
 use llvm_sys::initialization::{
     LLVMInitializeAnalysis, LLVMInitializeCodeGen, LLVMInitializeCore, LLVMInitializeIPA, LLVMInitializeIPO,
     LLVMInitializeInstCombine, LLVMInitializeScalarOpts, LLVMInitializeTarget, LLVMInitializeTransformUtils,
@@ -10,16 +14,19 @@ use llvm_sys::initialization::{
 };
 #[llvm_versions(4.0..=15.0)]
 use llvm_sys::initialization::{LLVMInitializeInstrumentation, LLVMInitializeObjCARCOpts};
+#[llvm_versions(4.0..=16.0)]
 use llvm_sys::prelude::{LLVMPassManagerRef, LLVMPassRegistryRef};
-#[llvm_versions(10.0..=latest)]
+#[llvm_versions(10.0..=16.0)]
 use llvm_sys::transforms::ipo::LLVMAddMergeFunctionsPass;
 #[llvm_versions(4.0..=15.0)]
 use llvm_sys::transforms::ipo::LLVMAddPruneEHPass;
+#[llvm_versions(4.0..=16.0)]
 use llvm_sys::transforms::ipo::{
     LLVMAddAlwaysInlinerPass, LLVMAddConstantMergePass, LLVMAddDeadArgEliminationPass, LLVMAddFunctionAttrsPass,
     LLVMAddFunctionInliningPass, LLVMAddGlobalDCEPass, LLVMAddGlobalOptimizerPass, LLVMAddIPSCCPPass,
     LLVMAddInternalizePass, LLVMAddStripDeadPrototypesPass, LLVMAddStripSymbolsPass,
 };
+#[llvm_versions(4.0..=16.0)]
 use llvm_sys::transforms::pass_manager_builder::{
     LLVMPassManagerBuilderCreate, LLVMPassManagerBuilderDispose, LLVMPassManagerBuilderPopulateFunctionPassManager,
     LLVMPassManagerBuilderPopulateModulePassManager, LLVMPassManagerBuilderRef,
@@ -27,6 +34,7 @@ use llvm_sys::transforms::pass_manager_builder::{
     LLVMPassManagerBuilderSetDisableUnrollLoops, LLVMPassManagerBuilderSetOptLevel, LLVMPassManagerBuilderSetSizeLevel,
     LLVMPassManagerBuilderUseInlinerWithThreshold,
 };
+#[llvm_versions(4.0..=16.0)]
 use llvm_sys::transforms::scalar::{
     LLVMAddAggressiveDCEPass, LLVMAddAlignmentFromAssumptionsPass, LLVMAddBasicAliasAnalysisPass,
     LLVMAddBitTrackingDCEPass, LLVMAddCFGSimplificationPass, LLVMAddCorrelatedValuePropagationPass,
@@ -39,6 +47,7 @@ use llvm_sys::transforms::scalar::{
     LLVMAddScopedNoAliasAAPass, LLVMAddSimplifyLibCallsPass, LLVMAddTailCallEliminationPass,
     LLVMAddTypeBasedAliasAnalysisPass, LLVMAddVerifierPass,
 };
+#[llvm_versions(4.0..=16.0)]
 use llvm_sys::transforms::vectorize::{LLVMAddLoopVectorizePass, LLVMAddSLPVectorizePass};
 
 // LLVM12 removes the ConstantPropagation pass
@@ -58,22 +67,29 @@ use llvm_sys::transforms::pass_builder::{
     LLVMPassBuilderOptionsSetMergeFunctions, LLVMPassBuilderOptionsSetSLPVectorization,
     LLVMPassBuilderOptionsSetVerifyEach,
 };
-#[llvm_versions(12.0..=latest)]
+#[llvm_versions(12.0..=16.0)]
 use llvm_sys::transforms::scalar::LLVMAddInstructionSimplifyPass;
 
+#[llvm_versions(4.0..=16.0)]
 use crate::module::Module;
+#[llvm_versions(4.0..=16.0)]
 use crate::values::{AsValueRef, FunctionValue};
+#[llvm_versions(4.0..=16.0)]
 use crate::OptimizationLevel;
 
+#[llvm_versions(4.0..=16.0)]
 use std::borrow::Borrow;
+#[llvm_versions(4.0..=16.0)]
 use std::marker::PhantomData;
 
+#[llvm_versions(4.0..=16.0)]
 // REVIEW: Opt Level might be identical to targets::Option<CodeGenOptLevel>
 #[derive(Debug)]
 pub struct PassManagerBuilder {
     pass_manager_builder: LLVMPassManagerBuilderRef,
 }
 
+#[llvm_versions(4.0..=16.0)]
 impl PassManagerBuilder {
     pub unsafe fn new(pass_manager_builder: LLVMPassManagerBuilderRef) -> Self {
         assert!(!pass_manager_builder.is_null());
@@ -202,6 +218,7 @@ impl PassManagerBuilder {
     }
 }
 
+#[llvm_versions(4.0..=16.0)]
 impl Drop for PassManagerBuilder {
     fn drop(&mut self) {
         unsafe { LLVMPassManagerBuilderDispose(self.pass_manager_builder) }
@@ -211,6 +228,7 @@ impl Drop for PassManagerBuilder {
 // This is an ugly privacy hack so that PassManagerSubType can stay private
 // to this module and so that super traits using this trait will be not be
 // implementable outside this library
+#[llvm_versions(4.0..=16.0)]
 pub trait PassManagerSubType {
     type Input;
 
@@ -220,6 +238,7 @@ pub trait PassManagerSubType {
         Self: Sized;
 }
 
+#[llvm_versions(4.0..=16.0)]
 impl PassManagerSubType for Module<'_> {
     type Input = ();
 
@@ -234,6 +253,7 @@ impl PassManagerSubType for Module<'_> {
 
 // With GATs https://github.com/rust-lang/rust/issues/44265 this could be
 // type Input<'a> = &'a Module;
+#[llvm_versions(4.0..=16.0)]
 impl<'ctx> PassManagerSubType for FunctionValue<'ctx> {
     type Input = Module<'ctx>;
 
@@ -250,12 +270,14 @@ impl<'ctx> PassManagerSubType for FunctionValue<'ctx> {
 /// A manager for running optimization and simplification passes. Much of the
 /// documentation for specific passes is directly from the [LLVM
 /// documentation](https://llvm.org/docs/Passes.html).
+#[llvm_versions(4.0..=16.0)]
 #[derive(Debug)]
 pub struct PassManager<T> {
     pub(crate) pass_manager: LLVMPassManagerRef,
     sub_type: PhantomData<T>,
 }
 
+#[llvm_versions(4.0..=16.0)]
 impl PassManager<FunctionValue<'_>> {
     /// Acquires the underlying raw pointer belonging to this `PassManager<T>` type.
     pub fn as_mut_ptr(&self) -> LLVMPassManagerRef {
@@ -272,6 +294,7 @@ impl PassManager<FunctionValue<'_>> {
     }
 }
 
+#[llvm_versions(4.0..=16.0)]
 impl<T: PassManagerSubType> PassManager<T> {
     pub unsafe fn new(pass_manager: LLVMPassManagerRef) -> Self {
         assert!(!pass_manager.is_null());
@@ -1056,17 +1079,20 @@ impl<T: PassManagerSubType> PassManager<T> {
     }
 }
 
+#[llvm_versions(4.0..=16.0)]
 impl<T> Drop for PassManager<T> {
     fn drop(&mut self) {
         unsafe { LLVMDisposePassManager(self.pass_manager) }
     }
 }
 
+#[llvm_versions(4.0..=16.0)]
 #[derive(Debug)]
 pub struct PassRegistry {
     pass_registry: LLVMPassRegistryRef,
 }
 
+#[llvm_versions(4.0..=16.0)]
 impl PassRegistry {
     pub unsafe fn new(pass_registry: LLVMPassRegistryRef) -> PassRegistry {
         assert!(!pass_registry.is_null());

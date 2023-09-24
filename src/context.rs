@@ -19,10 +19,16 @@ use llvm_sys::core::{
     LLVMCreateStringAttribute, LLVMDoubleTypeInContext, LLVMFP128TypeInContext, LLVMFloatTypeInContext,
     LLVMGetGlobalContext, LLVMGetMDKindIDInContext, LLVMHalfTypeInContext, LLVMInsertBasicBlockInContext,
     LLVMInt16TypeInContext, LLVMInt1TypeInContext, LLVMInt32TypeInContext, LLVMInt64TypeInContext,
-    LLVMInt8TypeInContext, LLVMIntTypeInContext, LLVMMDNodeInContext, LLVMMDStringInContext,
+    LLVMInt8TypeInContext, LLVMIntTypeInContext,
     LLVMModuleCreateWithNameInContext, LLVMPPCFP128TypeInContext, LLVMStructCreateNamed, LLVMStructTypeInContext,
     LLVMVoidTypeInContext, LLVMX86FP80TypeInContext,
 };
+#[llvm_versions(4.0..=8.0)]
+use llvm_sys::core::{LLVMMDNodeInContext, LLVMMDStringInContext};
+#[llvm_versions(9.0..=latest)]
+use llvm_sys::core::{LLVMMDNodeInContext2, LLVMMDStringInContext2, LLVMMetadataAsValue};
+#[llvm_versions(9.0..=latest)]
+use llvm_sys::prelude::LLVMMetadataRef;
 use llvm_sys::ir_reader::LLVMParseIRInContext;
 use llvm_sys::prelude::{LLVMContextRef, LLVMDiagnosticInfoRef, LLVMTypeRef, LLVMValueRef};
 use llvm_sys::target::{LLVMIntPtrTypeForASInContext, LLVMIntPtrTypeInContext};
@@ -41,10 +47,7 @@ use crate::types::AnyTypeEnum;
 #[llvm_versions(6.0..=latest)]
 use crate::types::MetadataType;
 use crate::types::{AsTypeRef, BasicTypeEnum, FloatType, FunctionType, IntType, StructType, VoidType};
-use crate::values::{
-    ArrayValue, AsValueRef, BasicMetadataValueEnum, BasicValueEnum, FunctionValue, MetadataValue, PointerValue,
-    StructValue,
-};
+use crate::values::{ArrayValue, AsValueRef, BasicMetadataValueEnum, BasicValueEnum, FunctionValue, MetadataValue, PointerValue, StructValue};
 use crate::AddressSpace;
 
 use std::marker::PhantomData;
@@ -321,6 +324,7 @@ impl ContextImpl {
         }
     }
 
+    #[llvm_versions(4.0..=8.0)]
     fn metadata_node<'ctx>(&self, values: &[BasicMetadataValueEnum<'ctx>]) -> MetadataValue<'ctx> {
         let mut tuple_values: Vec<LLVMValueRef> = values.iter().map(|val| val.as_value_ref()).collect();
         unsafe {
@@ -332,10 +336,34 @@ impl ContextImpl {
         }
     }
 
+    #[llvm_versions(9.0..=latest)]
+    fn metadata_node<'ctx>(&self, values: &[BasicMetadataValueEnum<'ctx>]) -> MetadataValue<'ctx> {
+        let mut tuple_values: Vec<LLVMMetadataRef> = values.iter().map(|val| val.into_metadata_value().as_metadata_ref()).collect();
+        unsafe {
+            let metadata = LLVMMDNodeInContext2(
+                self.0,
+                tuple_values.as_mut_ptr(),
+                tuple_values.len(),
+            );
+            MetadataValue::new(LLVMMetadataAsValue(self.0, metadata))
+        }
+    }
+
+    #[llvm_versions(4.0..=8.0)]
     fn metadata_string<'ctx>(&self, string: &str) -> MetadataValue<'ctx> {
         let c_string = to_c_str(string);
 
         unsafe { MetadataValue::new(LLVMMDStringInContext(self.0, c_string.as_ptr(), string.len() as u32)) }
+    }
+
+    #[llvm_versions(9.0..=latest)]
+    fn metadata_string<'ctx>(&self, string: &str) -> MetadataValue<'ctx> {
+        let c_string = to_c_str(string);
+
+        unsafe {
+            let metadata = LLVMMDStringInContext2(self.0, c_string.as_ptr(), string.len());
+            MetadataValue::new(LLVMMetadataAsValue(self.0, metadata))
+        }
     }
 
     fn get_kind_id(&self, key: &str) -> u32 {

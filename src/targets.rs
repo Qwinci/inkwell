@@ -7,8 +7,10 @@ use llvm_sys::target::{
 };
 #[llvm_versions(4.0..=latest)]
 use llvm_sys::target_machine::LLVMCreateTargetDataLayout;
+#[llvm_versions(4.0..=16.0)]
+use llvm_sys::target_machine::LLVMAddAnalysisPasses;
 use llvm_sys::target_machine::{
-    LLVMAddAnalysisPasses, LLVMCodeGenFileType, LLVMCodeGenOptLevel, LLVMCodeModel, LLVMCreateTargetMachine,
+    LLVMCodeGenFileType, LLVMCodeGenOptLevel, LLVMCodeModel, LLVMCreateTargetMachine,
     LLVMDisposeTargetMachine, LLVMGetDefaultTargetTriple, LLVMGetFirstTarget, LLVMGetNextTarget,
     LLVMGetTargetDescription, LLVMGetTargetFromName, LLVMGetTargetFromTriple, LLVMGetTargetMachineCPU,
     LLVMGetTargetMachineFeatureString, LLVMGetTargetMachineTarget, LLVMGetTargetMachineTriple, LLVMGetTargetName,
@@ -23,6 +25,7 @@ use crate::context::AsContextRef;
 use crate::data_layout::DataLayout;
 use crate::memory_buffer::MemoryBuffer;
 use crate::module::Module;
+#[llvm_versions(4.0..=16.0)]
 use crate::passes::PassManager;
 use crate::support::{to_c_str, LLVMString};
 use crate::types::{AnyType, AsTypeRef, IntType, StructType};
@@ -1104,6 +1107,7 @@ impl TargetMachine {
     }
 
     // TODO: Move to PassManager?
+    #[llvm_versions(4.0..=16.0)]
     pub fn add_analysis_passes<T>(&self, pass_manager: &PassManager<T>) {
         unsafe { LLVMAddAnalysisPasses(self.target_machine, pass_manager.pass_manager) }
     }

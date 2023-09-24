@@ -3,9 +3,11 @@ use llvm_sys::core::{
     LLVMConstIntGetSExtValue, LLVMConstIntGetZExtValue, LLVMConstIntToPtr, LLVMConstLShr, LLVMConstMul,
     LLVMConstNSWAdd, LLVMConstNSWMul, LLVMConstNSWNeg, LLVMConstNSWSub, LLVMConstNUWAdd, LLVMConstNUWMul,
     LLVMConstNUWNeg, LLVMConstNUWSub, LLVMConstNeg, LLVMConstNot, LLVMConstOr, LLVMConstSExt, LLVMConstSExtOrBitCast,
-    LLVMConstSIToFP, LLVMConstSelect, LLVMConstShl, LLVMConstSub, LLVMConstTrunc, LLVMConstTruncOrBitCast,
+    LLVMConstSIToFP, LLVMConstShl, LLVMConstSub, LLVMConstTrunc, LLVMConstTruncOrBitCast,
     LLVMConstUIToFP, LLVMConstXor, LLVMConstZExt, LLVMConstZExtOrBitCast, LLVMIsAConstantInt,
 };
+#[llvm_versions(4.0..=16.0)]
+use llvm_sys::core::LLVMConstSelect;
 use llvm_sys::prelude::LLVMValueRef;
 
 use std::convert::TryFrom;
@@ -14,7 +16,9 @@ use std::fmt::{self, Display};
 
 use crate::types::{AsTypeRef, FloatType, IntType, PointerType};
 use crate::values::traits::AsValueRef;
-use crate::values::{BasicValue, BasicValueEnum, FloatValue, InstructionValue, PointerValue, Value};
+#[llvm_versions(4.0..=16.0)]
+use crate::values::{BasicValue, BasicValueEnum};
+use crate::values::{FloatValue, InstructionValue, PointerValue, Value};
 use crate::IntPredicate;
 
 use super::AnyValue;
@@ -247,6 +251,7 @@ impl<'ctx> IntValue<'ctx> {
     }
 
     // SubTypes: self can only be IntValue<bool>
+    #[llvm_versions(4.0..=16.0)]
     pub fn const_select<BV: BasicValue<'ctx>>(self, then: BV, else_: BV) -> BasicValueEnum<'ctx> {
         unsafe {
             BasicValueEnum::new(LLVMConstSelect(
